@@ -286,7 +286,7 @@ class Scanner:
         for pref, why in self.excl:
             if p == pref or p.startswith(pref + os.sep):
                 return why
-        if os.path.basename(p) in SKIP_DIR_NAMES:
+        if os.path.basename(p).lower() in SKIP_DIR_NAMES:
             return "sensitive or irrelevant folder name / hassas ya da ilgisiz klasör adı"
         return None
 

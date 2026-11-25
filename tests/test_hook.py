@@ -284,6 +284,18 @@ def test_agent_cannot_tamper(cmd):
     assert "koruma" in out["hookSpecificOutput"]["permissionDecisionReason"]
 
 
+def test_repo_uninstall_script_is_tamper(tmp_path):
+    (tmp_path / "uninstall.ps1").write_text("# depbouncer uninstaller\n", encoding="utf-8")
+    (tmp_path / "install.ps1").write_text("Write-Host other project\n", encoding="utf-8")
+    for cmd, want in (("powershell -ExecutionPolicy Bypass -File .\\uninstall.ps1", "deny"),
+                      ("powershell -File install.ps1", None)):
+        req = claude(cmd)
+        req["cwd"] = str(tmp_path)
+        code, out, _ = run("claude", req)
+        got = (out or {}).get("hookSpecificOutput", {}).get("permissionDecision")
+        assert got == want, cmd
+
+
 def test_reading_settings_is_fine():
     assert run("claude", claude("cat ~/.claude/settings.json"))[1] is None
     assert run("claude", claude("C:/Users/x/AppData/Local/depbouncer/bin/depbouncer.cmd scan --status"))[1] is None

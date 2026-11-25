@@ -94,14 +94,34 @@ def _is_protected_file(path):
     return bool(_PROTECTED_NAMES.search(norm)) and not norm.lower().endswith((".md",))
 
 
+_SCRIPT_REF = re.compile(r"[^\s\"'&;|]*(un)?install\.ps1", re.I)
+
+
+def _is_our_script(cmd, cwd):
+    """An install/uninstall .ps1 that is depbouncer's own (e.g. run from a clone of the repo)."""
+    for m in _SCRIPT_REF.finditer(cmd):
+        p = os.path.expandvars(os.path.expanduser(m.group(0)))
+        if not os.path.isabs(p):
+            p = os.path.join(cwd or os.getcwd(), p)
+        try:
+            with open(p, encoding="utf-8", errors="replace") as f:
+                if "depbouncer" in f.read(20000).lower():
+                    return True
+        except OSError:
+            continue
+    return False
+
+
 def tamper_reason(req):
     if req.command:
         c = req.command
         if _APPROVE_CMD.search(c):
             return "depbouncer approve/install/uninstall"
+        if _is_our_script(c, req.cwd):
+            return "depbouncer install/uninstall script"
         expanded = os.path.expandvars(c.replace("$env:LOCALAPPDATA", os.environ.get("LOCALAPPDATA", "")))
         flat = expanded.replace("/", "\\").lower()
-        if (_PROTECTED_NAMES.search(expanded) or str(data_dir()).replace("/", "\\").lower() in flat) \
+        if (_PROTECTED_NAMES.search(c) or _PROTECTED_NAMES.search(expanded) or str(data_dir()).replace("/", "\\").lower() in flat) \
                 and _WRITE_VERB.search(_strip_depbouncer_cli(expanded)):
             return "write to protected file"
     for e in req.edits:
