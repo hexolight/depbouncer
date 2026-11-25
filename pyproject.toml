@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "depbouncer"
+version = "0.1.0"
+description = "Checks packages that AI coding agents try to install (npm, PyPI, NuGet) before they are installed."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = []          # standard library only
+
+[project.scripts]
+depbouncer = "depbouncer.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"depbouncer.data" = ["*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
