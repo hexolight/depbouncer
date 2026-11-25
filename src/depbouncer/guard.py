@@ -100,7 +100,7 @@ _SCRIPT_REF = re.compile(r"[^\s\"'&;|]*(un)?install\.ps1", re.I)
 def _is_our_script(cmd, cwd):
     """An install/uninstall .ps1 that is depbouncer's own (e.g. run from a clone of the repo)."""
     for m in _SCRIPT_REF.finditer(cmd):
-        p = os.path.expandvars(os.path.expanduser(m.group(0)))
+        p = os.path.expandvars(os.path.expanduser(m.group(0))).replace("\\", os.sep)
         if not os.path.isabs(p):
             p = os.path.join(cwd or os.getcwd(), p)
         try:
